@@ -23,7 +23,6 @@ public class MainPageTest {
     public static void setUpAll() {
         Configuration.browser = "firefox";
         Configuration.startMaximized = true;
-        SelenideLogger.addListener("allure", new AllureSelenide());
     }
 
     @BeforeEach
@@ -62,10 +61,10 @@ public class MainPageTest {
         switchTo().frame($x("//iframe[@class='panel-content panel-with-header']"));
         mainPage.commentInput.should(exist).sendKeys("bot attack!");
         mainPage.sendCommentBtn.click();
-        String msg = $x("//div[@class='comment-content'][last()]").text();
-        String time = $x("//span[@class='time'][last()]").text();
-        Assertions.assertEquals("bot attack!", msg);
-        Assertions.assertEquals("прямо сейчас", time);
+        Assertions.assertDoesNotThrow(() -> {
+            String msg = $x("//div[contains(string(), 'bot attack!')]").text();
+            String time = $x("//span[contains(string(), 'прямо сейчас')]").text();
+        });
     }
 
     @Test
@@ -108,5 +107,14 @@ public class MainPageTest {
         switchTo().frame($x("//iframe[@class='modal-body modal-iframe']").shouldBe(Condition.visible));
         String msg = $x("//p[@class='lead']").shouldBe(visible).text();
         Assertions.assertEquals("Ваш уровень опыта недостаточен для использования этой функции.", msg);
+    }
+
+    @Test
+    public void filterObjects() {
+        var modifyItem = $x("//li[@class='n-0-1 item-1 dropdown']").hover();
+        modifyItem.$x("ul/li[2]").shouldBe(Condition.visible).click();
+        Assertions.assertDoesNotThrow(() -> {
+            $x("//span[contains(@style, background-image: url(\"/img/markers/category-marker.png?660\"))]");
+        });
     }
 }
